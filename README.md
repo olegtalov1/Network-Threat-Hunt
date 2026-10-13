@@ -14,21 +14,23 @@ A hunt through a large packet capture for the three signals SOC analysts look fo
 ## Hunt 1: Long-lived connections
 Sorting TCP conversations by duration (130,867 TCP conversations in the capture) surfaced several connections lasting roughly **86,000 seconds (about 24 hours)** while moving almost no data, around 6-8 bits/s in each direction.
 
-![Long connections](images/01-long-connections.png)
+<img width="1916" height="974" alt="01-long-connections" src="https://github.com/user-attachments/assets/2eb3af8e-cc28-4792-9577-313ea1542bfe" />
 
 **Why it matters:** Legitimate sessions usually end. A connection that stays open for a full day at a trickle of traffic can indicate a persistent remote-access channel or command-and-control (C2) session.
 
 ## Hunt 2: Beaconing
 Filtering traffic from `192.168.88.2` to `165.227.88.15` and adding a **Delta time** column showed DNS queries leaving at a near-constant interval of about **1.07 seconds**. 108,908 packets matched this filter.
 
-![Beacon interval](images/02-dns-beacon-interval.png)
+<img width="953" height="821" alt="02-dns-beacon-interval" src="https://github.com/user-attachments/assets/acc2ed22-6363-46ee-80cf-669280809706" />
+
 
 **Why it matters:** Human-driven traffic is irregular. Machine-driven check-ins at a fixed interval to an external address are a classic beaconing pattern. DNS is a common channel for this because it is rarely blocked.
 
 ## Hunt 3: DNS failures (NXDOMAIN)
 Filtering with `dns.flags.rcode == 3` isolated "No such name" responses. Many were for internal-style names such as `wpad.Win.Lab` and `_ldap._tcp...Win.Lab` that were answered by public root servers.
 
-![NXDOMAIN responses](images/03-nxdomain-responses.png)
+<img width="1586" height="821" alt="03-nxdomain-responses" src="https://github.com/user-attachments/assets/e233709c-66b2-4af5-82ed-b53f66abc889" />
+
 
 **Why it matters:** Internal Active Directory names should resolve inside the network. Seeing them sent to the internet points to DNS misconfiguration. It also leaks internal naming information, and wpad lookups are a known target for hijacking.
 
